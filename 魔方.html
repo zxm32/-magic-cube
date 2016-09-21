@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Magic Cube</title>
+    <script type="text/javascript" src="libs/three.min.js"></script>
+    <script type="text/javascript" src="libs/stats.js"></script>
+    <script type="text/javascript" src="libs/dat.gui.js"></script>
+	<script type="text/javascript" src="libs/OrbitControls.js"></script>
+	<script type="text/javascript" src="libs/tween.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+
+<div id="Stats-output">
+</div>
+<div id="WebGL-output">
+</div>
+
+<script type="text/javascript">
+
+    function init() {
+
+        var stats = initStats();
+
+        // 场景
+        var scene = new THREE.Scene();
+
+        // 相机
+        var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+		
+        // 渲染器
+        var renderer = new THREE.WebGLRenderer();
+
+        renderer.setClearColor(new THREE.Color(0xEEEEEE, 1.0));
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMapEnabled = false;
+
+        // 生成平面
+        var planeGeometry = new THREE.PlaneGeometry(60, 40, 1, 1);
+        var planeMaterial = new THREE.MeshLambertMaterial({color: 0xffffff});
+        var plane = new THREE.Mesh(planeGeometry, planeMaterial);
+        plane.receiveShadow = true;
+
+        // 平面旋转及位置设置
+        plane.rotation.x = -0.5 * Math.PI;
+        plane.position.x = 0;
+        plane.position.y = -15;
+        plane.position.z = 0;
+
+        //scene.add(plane);
+
+        // 相机
+        camera.position.x = -20;
+        camera.position.y = 20;
+        camera.position.z = 20;
+        camera.lookAt(scene.position);
+		
+		var orbitControls = new THREE.OrbitControls(camera);
+        orbitControls.autoRotate = false;
+		var clock = new THREE.Clock();
+
+
+        // 添加聚光灯
+        var spotLight = new THREE.SpotLight(0xffffff);
+        spotLight.position.set(-40, 60, -10);
+        spotLight.castShadow = true;
+        scene.add(spotLight);
+
+        document.getElementById("WebGL-output").appendChild(renderer.domElement);
+
+        var group = new THREE.Mesh();
+        // 材质
+        var mats = [];
+        mats.push(new THREE.MeshBasicMaterial({color: 0xff0000}));
+        mats.push(new THREE.MeshBasicMaterial({color: 0xffff00}));
+        mats.push(new THREE.MeshBasicMaterial({color: 0x00ff00}));
+        mats.push(new THREE.MeshBasicMaterial({color: 0x00ffff}));
+        mats.push(new THREE.MeshBasicMaterial({color: 0xff00ff}));
+        mats.push(new THREE.MeshBasicMaterial({color: 0x0000ff}));
+        //mats.push(new THREE.MeshBasicMaterial({color: 0xff5800}));
+        //mats.push(new THREE.MeshBasicMaterial({color: 0xff5800}));
+        //mats.push(new THREE.MeshBasicMaterial({color: 0xC41E3A}));
+       // mats.push(new THREE.MeshBasicMaterial({color: 0xC41E3A}));
+        //mats.push(new THREE.MeshBasicMaterial({color: 0xffffff}));
+        //mats.push(new THREE.MeshBasicMaterial({color: 0xffffff}));
+
+        var faceMaterial = new THREE.MeshFaceMaterial(mats);
+
+		//生成27个小方块
+        for (var x = 0; x < 3; x++) {
+            for (var y = 0; y < 3; y++) {
+                for (var z = 0; z < 3; z++) {
+                    var cubeGeom = new THREE.CubeGeometry(2.9, 2.9, 2.9);
+                    var cube = new THREE.Mesh(cubeGeom, faceMaterial);
+                    cube.position.set(x * 3 - 3, y * 3-3, z * 3 - 3);
+                    group.add(cube);
+                }
+            }
+        }
+		
+        scene.add(group);
+		 
+		 //控制围绕XYZ中的一个轴旋转
+		 var controls = new function () {
+            this.rotationSpeed = 0.02;
+            this.numberOfObjects = scene.children.length;
+			this.x = false;
+			this.y = false;
+			this.z = false;
+        };
+
+        var gui = new dat.GUI();
+        gui.add(controls, 'rotationSpeed', 0, 0.5);
+		gui.add(controls, 'x').onChange(controls.y = false,controls.z = false);
+		gui.add(controls, 'y').onChange(controls.x = false,controls.z = false);
+		gui.add(controls, 'z').onChange(controls.x = false,controls.y = false);
+		
+		
+        var step = 0;
+		
+		//光线追踪
+		var projector = new THREE.Projector();
+		var mouseVector = new THREE.Vector3();
+
+		var containerWidth = document.getElementById("WebGL-output").clientWidth;
+		var containerHeight = document.getElementById("WebGL-output").clientHeight;
+		
+		// User interaction
+		window.addEventListener( 'mousedown', onMouseMove, false );
+		
+		var groups = new THREE.Mesh();
+		
+		//光线追踪
+		function onMouseMove( e ) {
+		
+		mouseVector.x = 2 * (e.clientX / containerWidth) - 1;
+		mouseVector.y = 1 - 2 * ( e.clientY / containerHeight );
+
+		var raycaster = projector.pickingRay( mouseVector.clone(), camera ),
+			intersects = raycaster.intersectObjects( group.children );
+			
+			var intersection = intersects[ 0 ];
+			if(intersection){
+			obj = intersection.object;
+			
+				if(controls.x){
+				     //controls.y 与 controls.z 必须为false
+					 controls.y = false;
+					 controls.z = false;
+
+					 if(obj.position.x < 1 && obj.position.x > -1.0){
+					     for(var k=0;k<27;k++){
+				            if(group.children[k].position.x < 1 && group.children[k].position.x > -1.0){//group.children[k].id < 16 && group.children[k].id > 6
+								var m = new THREE.Matrix4();
+								var m1 = new THREE.Matrix4();
+								var beta = Math.PI/2;
+							    m1.makeRotationX( beta );
+								m.multiply( m1 );
+								group.children[k].applyMatrix(m);
+								//group.children[k].rotation.x = 0.5*Math.PI;
+								
+							 }
+						   }
+						}
+						else{
+						  for(var k=0;k<27;k++){
+				             if(group.children[k].position.x == obj.position.x){//group.children[k].id < 16 && group.children[k].id > 6
+								var m = new THREE.Matrix4();
+								var m1 = new THREE.Matrix4();
+								var beta = Math.PI/2;
+								m1.makeRotationX( beta );
+								m.multiply( m1 );
+								group.children[k].applyMatrix(m);
+					 }
+				   }
+						}
+				     
+				}
+				
+				if(controls.y){
+				     //controls.x 与 controls.z 必须为false
+						 controls.x = false;
+						 controls.z = false;
+				
+				     if(obj.position.y < 1 && obj.position.y > -1.0){
+					     for(var k=0;k<27;k++){
+				            if(group.children[k].position.y < 1 && group.children[k].position.y > -1.0){//group.children[k].id < 16 && group.children[k].id > 6
+								var m = new THREE.Matrix4();
+								var m1 = new THREE.Matrix4();
+								var beta = Math.PI/2;
+								m1.makeRotationY( beta );
+								m.multiply( m1 );
+								group.children[k].applyMatrix(m);
+							 }
+						   }
+						}
+						else{
+						  for(var k=0;k<27;k++){
+				             if(group.children[k].position.y == obj.position.y){//group.children[k].id < 16 && group.children[k].id > 6
+								var m = new THREE.Matrix4();
+								var m1 = new THREE.Matrix4();
+								var beta = Math.PI/2;
+								m1.makeRotationY( beta );
+								m.multiply( m1 );
+								group.children[k].applyMatrix(m);
+					 }
+				   }
+						}
+				}
+				
+				if(controls.z){
+				   //controls.x 与 controls.y 必须为false
+					 controls.x = false;
+					 controls.y = false;
+				
+				     if(obj.position.z < 1 && obj.position.z > -1.0){
+					     for(var k=0;k<27;k++){
+				            if(group.children[k].position.z < 1 && group.children[k].position.z > -1.0){//group.children[k].id < 16 && group.children[k].id > 6
+								var m = new THREE.Matrix4();
+								var m1 = new THREE.Matrix4();
+								var beta = Math.PI/2;
+								m1.makeRotationZ( beta );
+								m.multiply( m1 );
+								group.children[k].applyMatrix(m);
+							 }
+						   }
+						}
+						else{
+						  for(var k=0;k<27;k++){
+				             if(group.children[k].position.z == obj.position.z){//group.children[k].id < 16 && group.children[k].id > 6
+								var m = new THREE.Matrix4();
+								var m1 = new THREE.Matrix4();
+								var beta = Math.PI/2;
+								m1.makeRotationZ( beta );
+								m.multiply( m1 );
+								group.children[k].applyMatrix(m);
+					 }
+				   }
+						}
+				}
+			}
+	}
+
+       
+        render();
+
+        function render() {
+            stats.update();
+			
+            //var delta = clock.getDelta();
+            //orbitControls.update(delta);
+
+            //group.rotation.y = step += controls.rotationSpeed;
+            // render using requestAnimationFrame
+            requestAnimationFrame(render);
+            renderer.render(scene, camera);
+        }
+
+        function initStats() {
+
+            var stats = new Stats();
+
+            stats.setMode(0); // 0: fps, 1: ms
+
+
+            // Align top-left
+            stats.domElement.style.position = 'absolute';
+            stats.domElement.style.left = '0px';
+            stats.domElement.style.top = '0px';
+
+            document.getElementById("Stats-output").appendChild(stats.domElement);
+
+            return stats;
+        }
+	
+    }
+    window.onload = init;
+</script>
+</body>
+</html>
