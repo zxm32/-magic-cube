@@ -4,8 +4,9 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Magic Cube</title>
+    <title>Magic</title>
     <script type="text/javascript" src="libs/three.min.js"></script>
+
     <script type="text/javascript" src="libs/stats.js"></script>
     <script type="text/javascript" src="libs/dat.gui.js"></script>
 	<script type="text/javascript" src="libs/OrbitControls.js"></script>
@@ -85,12 +86,6 @@
         mats.push(new THREE.MeshBasicMaterial({color: 0x00ffff}));
         mats.push(new THREE.MeshBasicMaterial({color: 0xff00ff}));
         mats.push(new THREE.MeshBasicMaterial({color: 0x0000ff}));
-        //mats.push(new THREE.MeshBasicMaterial({color: 0xff5800}));
-        //mats.push(new THREE.MeshBasicMaterial({color: 0xff5800}));
-        //mats.push(new THREE.MeshBasicMaterial({color: 0xC41E3A}));
-       // mats.push(new THREE.MeshBasicMaterial({color: 0xC41E3A}));
-        //mats.push(new THREE.MeshBasicMaterial({color: 0xffffff}));
-        //mats.push(new THREE.MeshBasicMaterial({color: 0xffffff}));
 
         var faceMaterial = new THREE.MeshFaceMaterial(mats);
 
@@ -135,11 +130,14 @@
 		
 		// User interaction
 		window.addEventListener( 'mousedown', onMouseMove, false );
-		
+
 		var groups = new THREE.Mesh();
+		var timer = 0;
 		
 		//光线追踪
 		function onMouseMove( e ) {
+		
+		var rotationaxis = setInterval( function(){ 
 		
 		mouseVector.x = 2 * (e.clientX / containerWidth) - 1;
 		mouseVector.y = 1 - 2 * ( e.clientY / containerHeight );
@@ -156,32 +154,31 @@
 					 controls.y = false;
 					 controls.z = false;
 
-					 if(obj.position.x < 1 && obj.position.x > -1.0){
+					 if(obj.position.x < 0.5 && obj.position.x > -0.5){
 					     for(var k=0;k<27;k++){
-				            if(group.children[k].position.x < 1 && group.children[k].position.x > -1.0){//group.children[k].id < 16 && group.children[k].id > 6
+				            if(group.children[k].position.x < 1 && group.children[k].position.x > -1.0){//group.children[k].id < 16 && group.children[k].id > 6	
 								var m = new THREE.Matrix4();
 								var m1 = new THREE.Matrix4();
-								var beta = Math.PI/2;
+								var beta = Math.PI/16;
 							    m1.makeRotationX( beta );
 								m.multiply( m1 );
 								group.children[k].applyMatrix(m);
 								//group.children[k].rotation.x = 0.5*Math.PI;
-								
 							 }
 						   }
 						}
 						else{
 						  for(var k=0;k<27;k++){
-				             if(group.children[k].position.x == obj.position.x){//group.children[k].id < 16 && group.children[k].id > 6
+				             if((group.children[k].position.x < obj.position.x+0.5) && (group.children[k].position.x > obj.position.x-0.5)){
 								var m = new THREE.Matrix4();
 								var m1 = new THREE.Matrix4();
-								var beta = Math.PI/2;
+								var beta = Math.PI/16;
 								m1.makeRotationX( beta );
 								m.multiply( m1 );
 								group.children[k].applyMatrix(m);
-					 }
-				   }
-						}
+								 }
+							   }
+							}
 				     
 				}
 				
@@ -190,12 +187,12 @@
 						 controls.x = false;
 						 controls.z = false;
 				
-				     if(obj.position.y < 1 && obj.position.y > -1.0){
+				     if(obj.position.y < 0.5 && obj.position.y > -0.5){
 					     for(var k=0;k<27;k++){
-				            if(group.children[k].position.y < 1 && group.children[k].position.y > -1.0){//group.children[k].id < 16 && group.children[k].id > 6
+				            if(group.children[k].position.y < 1 && group.children[k].position.y > -1.0){
 								var m = new THREE.Matrix4();
 								var m1 = new THREE.Matrix4();
-								var beta = Math.PI/2;
+								var beta = Math.PI/16;
 								m1.makeRotationY( beta );
 								m.multiply( m1 );
 								group.children[k].applyMatrix(m);
@@ -204,10 +201,10 @@
 						}
 						else{
 						  for(var k=0;k<27;k++){
-				             if(group.children[k].position.y == obj.position.y){//group.children[k].id < 16 && group.children[k].id > 6
+				             if((group.children[k].position.y < obj.position.y+0.5) && (group.children[k].position.y > obj.position.y-0.5)){
 								var m = new THREE.Matrix4();
 								var m1 = new THREE.Matrix4();
-								var beta = Math.PI/2;
+								var beta = Math.PI/16;
 								m1.makeRotationY( beta );
 								m.multiply( m1 );
 								group.children[k].applyMatrix(m);
@@ -221,12 +218,12 @@
 					 controls.x = false;
 					 controls.y = false;
 				
-				     if(obj.position.z < 1 && obj.position.z > -1.0){
+				     if(obj.position.z < 0.5 && obj.position.z > -0.5){
 					     for(var k=0;k<27;k++){
 				            if(group.children[k].position.z < 1 && group.children[k].position.z > -1.0){//group.children[k].id < 16 && group.children[k].id > 6
 								var m = new THREE.Matrix4();
 								var m1 = new THREE.Matrix4();
-								var beta = Math.PI/2;
+								var beta = Math.PI/16;
 								m1.makeRotationZ( beta );
 								m.multiply( m1 );
 								group.children[k].applyMatrix(m);
@@ -235,10 +232,10 @@
 						}
 						else{
 						  for(var k=0;k<27;k++){
-				             if(group.children[k].position.z == obj.position.z){//group.children[k].id < 16 && group.children[k].id > 6
+				             if((group.children[k].position.z < obj.position.z+0.5) && (group.children[k].position.z > obj.position.z-0.5)){
 								var m = new THREE.Matrix4();
 								var m1 = new THREE.Matrix4();
-								var beta = Math.PI/2;
+								var beta = Math.PI/16;
 								m1.makeRotationZ( beta );
 								m.multiply( m1 );
 								group.children[k].applyMatrix(m);
@@ -247,19 +244,19 @@
 						}
 				}
 			}
+				timer++;
+				if(timer == 8){
+					 clearInterval(rotationaxis);
+					 timer = 0;
+					}
+		},100);
 	}
-
-       
+   
         render();
 
         function render() {
             stats.update();
 			
-            //var delta = clock.getDelta();
-            //orbitControls.update(delta);
-
-            //group.rotation.y = step += controls.rotationSpeed;
-            // render using requestAnimationFrame
             requestAnimationFrame(render);
             renderer.render(scene, camera);
         }
@@ -280,6 +277,13 @@
 
             return stats;
         }
+		
+		//魔方旋转函数
+		function rotateByaxis(num){
+		 for(var i = 0; i<num.length; i++){
+		    group.children[i].rotation.x = Math.PI/16;
+		 }
+		}
 	
     }
     window.onload = init;
